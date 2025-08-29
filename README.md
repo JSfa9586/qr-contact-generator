@@ -1,36 +1,83 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 📇 연락처 QR 코드 생성기
 
-## Getting Started
+스마트폰(Android/iPhone)에서 스캔하면 자동으로 주소록에 저장되는 연락처 QR 코드를 생성하는 웹 애플리케이션입니다.
 
-First, run the development server:
+## 🌟 주요 기능
+
+- **vCard 형식 지원**: Android와 iPhone 모두 호환되는 표준 vCard 3.0 형식
+- **실시간 QR 생성**: 입력한 정보를 즉시 QR 코드로 변환
+- **다운로드 기능**: 생성된 QR 코드를 PNG 이미지로 저장
+- **반응형 디자인**: 모바일, 태블릿, 데스크톱 모든 환경에서 최적화
+- **한글 지원**: 한국어 이름과 주소 완벽 지원
+
+## 📱 지원 정보
+
+입력 가능한 연락처 정보:
+- 이름 (성, 이름)
+- 전화번호
+- 이메일
+- 회사명
+- 직책
+- 웹사이트
+- 주소
+
+## 🚀 시작하기
+
+### 개발 환경 실행
 
 ```bash
+# 의존성 설치
+npm install
+
+# 개발 서버 실행
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+http://localhost:3000 에서 애플리케이션을 확인할 수 있습니다.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### 프로덕션 빌드
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+# 프로덕션 빌드
+npm run build
 
-## Learn More
+# 프로덕션 서버 실행
+npm start
+```
 
-To learn more about Next.js, take a look at the following resources:
+## 📦 Vercel 배포
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+이 프로젝트는 Vercel에 쉽게 배포할 수 있도록 설정되어 있습니다.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+1. [Vercel](https://vercel.com)에 가입/로그인
+2. GitHub 저장소 연결
+3. 자동 배포 완료!
 
-## Deploy on Vercel
+또는 Vercel CLI 사용:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```bash
+# Vercel CLI 설치 (전역)
+npm i -g vercel
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+# 배포
+vercel
+```
+
+## 🛠 기술 스택
+
+- **Next.js 15.5.2**: React 프레임워크
+- **TypeScript**: 타입 안정성
+- **Tailwind CSS**: 스타일링
+- **qrcode**: QR 코드 생성 라이브러리
+
+## 📄 사용 방법
+
+1. 연락처 정보를 입력합니다
+2. "QR 코드 생성" 버튼을 클릭합니다
+3. 생성된 QR 코드를 확인합니다
+4. 필요시 "QR 코드 다운로드" 버튼으로 이미지를 저장합니다
+5. 스마트폰 카메라로 QR 코드를 스캔하면 자동으로 연락처 추가 화면이 나타납니다
+
+## 📝 라이선스
+
+MIT License
