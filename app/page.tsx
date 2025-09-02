@@ -14,6 +14,25 @@ interface ContactInfo {
   address: string;
 }
 
+// Quoted-Printable 인코딩 함수 - 한글을 안전하게 인코딩
+function toQuotedPrintable(str: string): string {
+  return str
+    .split('')
+    .map(char => {
+      const code = char.charCodeAt(0);
+      // ASCII 문자는 그대로, non-ASCII는 =XX 형식으로
+      if (code >= 32 && code <= 126 && char !== '=' && char !== '?') {
+        return char;
+      }
+      // UTF-8 바이트로 변환 후 Quoted-Printable 인코딩
+      const bytes = new TextEncoder().encode(char);
+      return Array.from(bytes)
+        .map(byte => '=' + byte.toString(16).toUpperCase().padStart(2, '0'))
+        .join('');
+    })
+    .join('');
+}
+
 export default function Home() {
   const [contactInfo, setContactInfo] = useState<ContactInfo>({
     firstName: '',
@@ -30,38 +49,104 @@ export default function Home() {
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
 
   const generateVCard = (info: ContactInfo): string => {
-    // 최소한의 정보만 포함하여 QR 코드 데이터 크기 최소화
+    // iPhone에서 한글 인식을 위해 QUOTED-PRINTABLE 인코딩 사용
+    const fullName = `${info.firstName} ${info.lastName}`.trim();
+    
+    // 한글이 포함된 경우 QUOTED-PRINTABLE 인코딩 사용
+    const hasKorean = (text: string) => /[ᄀ-ᇿ㄰-㆏가-힯]/g.test(text);
+    
+    // 이름 필드 처리
+    let nameField = '';
+    let fnField = '';
+    
+    if (hasKorean(info.lastName || '') || hasKorean(info.firstName || '')) {
+      // 한글이 있으면 QUOTED-PRINTABLE 인코딩
+      const encodedLastName = toQuotedPrintable(info.lastName || '');
+      const encodedFirstName = toQuotedPrintable(info.firstName || '');
+      const encodedFullName = toQuotedPrintable(fullName || 'No Name');
+      nameField = `N;ENCODING=QUOTED-PRINTABLE:${encodedLastName};${encodedFirstName};;;`;
+      fnField = `FN;ENCODING=QUOTED-PRINTABLE:${encodedFullName}`;
+    } else {
+      // 영문만 있으면 일반 형식
+      nameField = `N:${info.lastName || ''};${info.firstName || ''};;;`;
+      fnField = `FN:${fullName || 'No Name'}`;
+    }
+    
+    // 회사명, 직책, 주소 처리
+    let orgField = '';
+    let titleField = '';
+    let adrField = '';
+    
+    if (info.company) {
+      orgField = hasKorean(info.company) 
+        ? `ORG;ENCODING=QUOTED-PRINTABLE:${toQuotedPrintable(info.company)}`
+        : `ORG:${info.company}`;
+    }
+    
+    if (info.jobTitle) {
+      titleField = hasKorean(info.jobTitle)
+        ? `TITLE;ENCODING=QUOTED-PRINTABLE:${toQuotedPrintable(info.jobTitle)}`
+        : `TITLE:${info.jobTitle}`;
+    }
+    
+    if (info.address) {
+      adrField = hasKorean(info.address)
+        ? `ADR;TYPE=WORK;ENCODING=QUOTED-PRINTABLE:;;${toQuotedPrintable(info.address)};;;;`
+        : `ADR;TYPE=WORK:;;${info.address};;;;`;
+    }
+    
     const vcard = [
       'BEGIN:VCARD',
-      'VERSION:2.1', // 2.1 버전이 더 간결함
-      `N:${info.lastName};${info.firstName}`,
-      info.phone ? `TEL:${info.phone.replace(/-/g, '')}` : '', // 하이픈 제거로 데이터 절약
-      info.email ? `EMAIL:${info.email}` : '',
-      info.company ? `ORG:${info.company}` : '',
+      'VERSION:3.0',
+      nameField,
+      fnField,
+      info.phone ? `TEL;TYPE=CELL:${info.phone.replace(/-/g, '')}` : '',
+      info.email ? `EMAIL;TYPE=INTERNET:${info.email}` : '',
+      orgField,
+      titleField,
+      info.website ? `URL:${info.website}` : '',
+      adrField,
       'END:VCARD',
     ]
       .filter(line => line)
-      .join('\n'); // \r\n 대신 \n만 사용
+      .join('\r\n');
 
     return vcard;
   };
 
-  // 간소화된 vCard 생성 (필수 정보만)
+  // 간소화된 vCard 생성 (필수 정보만) - iPhone 호환성 개선
   const generateMinimalVCard = (info: ContactInfo): string => {
-    const name = `${info.lastName}${info.firstName}`.trim();
+    const fullName = `${info.firstName} ${info.lastName}`.trim();
     const phone = info.phone.replace(/-/g, '');
+    const hasKorean = (text: string) => /[ᄀ-ᇿ㄰-㆏가-힯]/g.test(text);
     
-    // 가장 최소한의 vCard
+    // 이름 필드 처리
+    let nameField = '';
+    let fnField = '';
+    
+    if (hasKorean(info.lastName || '') || hasKorean(info.firstName || '')) {
+      const encodedLastName = toQuotedPrintable(info.lastName || '');
+      const encodedFirstName = toQuotedPrintable(info.firstName || '');
+      const encodedFullName = toQuotedPrintable(fullName || 'No Name');
+      nameField = `N;ENCODING=QUOTED-PRINTABLE:${encodedLastName};${encodedFirstName};;;`;
+      fnField = `FN;ENCODING=QUOTED-PRINTABLE:${encodedFullName}`;
+    } else {
+      nameField = `N:${info.lastName || ''};${info.firstName || ''};;;`;
+      fnField = `FN:${fullName || 'No Name'}`;
+    }
+    
+    // iPhone 호환 최소 vCard (3.0 표준)
     return [
       'BEGIN:VCARD',
-      'VERSION:2.1',
-      name ? `N:${info.lastName};${info.firstName}` : 'N:;',
-      phone ? `TEL:${phone}` : '',
-      info.email ? `EMAIL:${info.email}` : '',
+      'VERSION:3.0',
+      nameField,
+      fnField,
+      phone ? `TEL;TYPE=CELL:${phone}` : '',
+      info.email ? `EMAIL;TYPE=INTERNET:${info.email}` : '',
       'END:VCARD',
     ]
       .filter(line => line)
-      .join('\n');
+      .join('\r\n');
   };
 
   const generateQRCode = async () => {
@@ -73,10 +158,11 @@ export default function Home() {
         ? generateMinimalVCard(contactInfo) 
         : generateVCard(contactInfo);
       
+      // QR 코드 생성 시 UTF-8 인코딩을 명시적으로 처리
       const url = await QRCode.toDataURL(vcard, {
         width: 500, // 고해상도로 생성 후 CSS로 축소
-        margin: 0, // 여백 완전 제거
-        errorCorrectionLevel: 'L', // 최소 오류 수정 (7% 복구)
+        margin: 1, // 최소 여백 유지 (스캔 안정성)
+        errorCorrectionLevel: 'M', // 중간 오류 수정 (15% 복구) - 한글 데이터에 더 안정적
         version: undefined, // 자동으로 최소 버전 선택
         maskPattern: undefined, // 최적 패턴 자동 선택
         color: {
