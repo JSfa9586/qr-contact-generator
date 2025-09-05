@@ -1,0 +1,15 @@
+{
+  "홍길동": {
+    "id": "홍길동",
+    "firstName": "길동",
+    "lastName": "홍",
+    "phone": "010-1234-5678",
+    "email": "hong@company.com",
+    "company": "ABC 회사",
+    "jobTitle": "부장",
+    "website": "https://company.com",
+    "address": "서울시 강남구 테헤란로 123",
+    "createdAt": "2024-08-29T00:00:00.000Z",
+    "updatedAt": "2024-08-29T00:00:00.000Z"
+  }
+}
